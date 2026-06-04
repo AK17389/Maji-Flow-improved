@@ -520,4 +520,4 @@ if __name__ == "__main__":
     init_db()
     # debug=False in production — set FLASK_ENV=development in .env for dev mode
     debug_mode = os.environ.get("FLASK_ENV", "production") == "development"
-    app.run(debug=debug_mode)
+    app.run(host="0.0.0.0", port=10000)
