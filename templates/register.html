@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Register — MAJI-FLOW{% endblock %}
+
+{% block content %}
+<div class="form-wrapper">
+    <div class="form-card">
+
+        <h2>Create account</h2>
+
+        <form action="{{ url_for('register') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="form-group">
+                <label for="role">I am registering as</label>
+                <select class="form-control" id="roleSelect" name="role" required onchange="toggleFields()">
+                    <option value="">Select a role…</option>
+                    <option value="client">Client / User</option>
+                    <option value="company">Company / Industry</option>
+                </select>
+            </div>
+
+            <!-- Client-only fields -->
+            <div id="clientFields">
+                <div class="form-group">
+                    <label for="fullname">Full name</label>
+                    <input class="form-control" type="text" id="fullname" name="fullname" placeholder="Your full name" autocomplete="name">
+                </div>
+            </div>
+
+            <!-- Company-only fields -->
+            <div id="companyFields" style="display:none;">
+                <div class="form-group">
+                    <label for="company_name">Company name</label>
+                    <input class="form-control" type="text" id="company_name" name="company_name" placeholder="Your company name">
+                </div>
+                <div class="form-group">
+                    <label for="contact">Contact number</label>
+                    <input class="form-control" type="tel" id="contact" name="contact" placeholder="+260 977 000 000">
+                </div>
+                <div class="form-group">
+                    <label for="branch_location">Branch location</label>
+                    <input class="form-control" type="text" id="branch_location" name="branch_location" placeholder="e.g. Lusaka Central">
+                </div>
+            </div>
+
+            <!-- Common fields -->
+            <div class="form-group">
+                <label for="email">Email address</label>
+                <input class="form-control" type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password <span style="color:var(--text-subtle); font-weight:400;">(min. 8 characters)</span></label>
+                <input class="form-control" type="password" id="password" name="password" placeholder="Choose a strong password" required minlength="8" autocomplete="new-password">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px;">
+                Create account
+            </button>
+        </form>
+
+        <p class="form-footer">
+            Already have an account?
+            <a href="{{ url_for('login') }}">Sign in</a>
+        </p>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleFields() {
+    const role          = document.getElementById('roleSelect').value;
+    const clientFields  = document.getElementById('clientFields');
+    const companyFields = document.getElementById('companyFields');
+
+    if (role === 'company') {
+        companyFields.style.display = 'block';
+        clientFields.style.display  = 'none';
+    } else {
+        companyFields.style.display = 'none';
+        clientFields.style.display  = 'block';
+    }
+}
+</script>
+{% endblock %}

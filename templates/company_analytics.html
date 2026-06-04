@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics — MAJI-FLOW{% endblock %}
+
+{% block head_extra %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block nav_links %}
+<a href="{{ url_for('company_dashboard') }}">Dashboard</a>
+<a href="{{ url_for('fixed_reports') }}">History</a>
+<a href="{{ url_for('company_analytics') }}">Analytics</a>
+<a href="{{ url_for('download_pdf') }}" class="btn btn-success btn-sm">↓ Download PDF</a>
+<a href="{{ url_for('logout') }}">Logout</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h2>System Analytics</h2>
+    <p>Real-time water leak monitoring statistics</p>
+</div>
+
+<div class="analytics-layout">
+
+    <!-- Stat cards -->
+    <div class="analytics-stats">
+
+        <div class="stat-card">
+            <div class="stat-label">Total Leaks</div>
+            <div class="stat-value danger">{{ total_leaks }}</div>
+            <div class="stat-sub">Detected leak events</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">Warnings</div>
+            <div class="stat-value warning">{{ total_warnings }}</div>
+            <div class="stat-sub">Pressure anomalies</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">Resolved</div>
+            <div class="stat-value success">{{ total_fixed }}</div>
+            <div class="stat-sub">Issues marked fixed</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">Active</div>
+            <div class="stat-value">{{ total_active }}</div>
+            <div class="stat-sub">Open, unresolved</div>
+        </div>
+
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-grid">
+
+        <div class="chart-card">
+            <h3>Incident Distribution</h3>
+            <canvas id="pieChart" height="200"></canvas>
+        </div>
+
+        <div class="chart-card">
+            <h3>Active vs Resolved</h3>
+            <canvas id="barChart" height="200"></canvas>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const isDark = document.documentElement.classList.contains('dark-mode')
+                || document.body.classList.contains('dark-mode');
+
+    const textColor  = isDark ? '#9ba3b8' : '#495057';
+    const gridColor  = isDark ? '#2a2d3a' : '#dee2e6';
+
+    // Pie chart — incident breakdown
+    const pieCtx = document.getElementById('pieChart');
+    new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Leaks', 'Warnings', 'Fixed'],
+            datasets: [{
+                data: [{{ total_leaks }}, {{ total_warnings }}, {{ total_fixed }}],
+                backgroundColor: ['#c0392b', '#d35400', '#1e8449'],
+                borderWidth: 2,
+                borderColor: isDark ? '#1a1d26' : '#ffffff',
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: textColor, padding: 16, font: { family: 'DM Sans' } }
+                }
+            }
+        }
+    });
+
+    // Bar chart — active vs resolved
+    const barCtx = document.getElementById('barChart');
+    new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Active Issues', 'Resolved'],
+            datasets: [{
+                label: 'Reports',
+                data: [{{ total_active }}, {{ total_fixed }}],
+                backgroundColor: ['#0077b6', '#1e8449'],
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    ticks: { color: textColor, font: { family: 'DM Sans' } },
+                    grid: { color: gridColor }
+                },
+                y: {
+                    ticks: { color: textColor, font: { family: 'DM Sans' } },
+                    grid: { color: gridColor },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+});
+</script>
+{% endblock %}

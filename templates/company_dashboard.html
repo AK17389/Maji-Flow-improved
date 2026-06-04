@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Company Dashboard — MAJI-FLOW{% endblock %}
+
+{% block nav_links %}
+<a href="{{ url_for('company_dashboard') }}">Dashboard</a>
+<a href="{{ url_for('fixed_reports') }}">History</a>
+<a href="{{ url_for('company_analytics') }}">Analytics</a>
+<a href="{{ url_for('download_pdf') }}" class="btn btn-success btn-sm">↓ Download PDF</a>
+<a href="{{ url_for('logout') }}">Logout</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h2>{{ company_name }}</h2>
+    <p>Smart Water Infrastructure Monitoring</p>
+</div>
+
+<!-- Active incident banner (shown/hidden by JS) -->
+<div class="incident-banner hidden" id="incidentBanner">
+    🚨 Active Incidents:
+    <span class="incident-count" id="incidentCount">0</span>
+</div>
+
+<!-- Filter bar -->
+<div class="filter-bar">
+    <span class="filter-label">Filter:</span>
+    <button class="filter-btn active" onclick="setFilter('', this)">All</button>
+    <button class="filter-btn" onclick="setFilter('LEAK', this)">Leaks only</button>
+    <button class="filter-btn" onclick="setFilter('WARNING', this)">Warnings only</button>
+
+    <div style="margin-left:auto;" class="last-updated">
+        <span class="live-dot"></span>
+        <span id="lastUpdated">Live</span>
+    </div>
+</div>
+
+<!-- Reports table -->
+<div class="table-wrapper">
+    <table id="reportsTable">
+        <thead>
+            <tr>
+                <th>Location</th>
+                <th>Pressure</th>
+                <th>Status</th>
+                <th>Timestamp</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <tr class="loading-row">
+                <td colspan="5">
+                    <span class="loading-spinner"></span> Loading reports…
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentFilter = '';
+
+// CSRF token for POST requests (Flask-WTF)
+const CSRF_TOKEN = '{{ csrf_token() }}';
+
+async function loadReports() {
+    const tableBody   = document.getElementById('tableBody');
+    const lastUpdated = document.getElementById('lastUpdated');
+    const banner      = document.getElementById('incidentBanner');
+    const countEl     = document.getElementById('incidentCount');
+
+    if (!tableBody) return;
+
+    try {
+        const url = '/api/reports' + (currentFilter ? '?filter=' + currentFilter : '');
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Network error');
+
+        const data = await response.json();
+        const reports = data.reports || [];
+
+        // Update incident counter
+        const leaks = reports.filter(r => r.status === 'LEAK').length;
+        if (leaks > 0) {
+            banner.classList.remove('hidden');
+            countEl.textContent = leaks;
+        } else {
+            banner.classList.add('hidden');
+        }
+
+        tableBody.innerHTML = '';
+
+        if (reports.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" style="text-align:center; padding:48px; color:var(--text-subtle);">
+                        No active reports found
+                    </td>
+                </tr>`;
+            lastUpdated.textContent = 'Updated: ' + new Date().toLocaleTimeString();
+            return;
+        }
+
+        reports.forEach(function (report) {
+            const tr = document.createElement('tr');
+
+            if (report.status === 'LEAK')        tr.className = 'row-leak';
+            else if (report.status === 'WARNING') tr.className = 'row-warning';
+
+            tr.innerHTML = `
+                <td><strong>${escapeHtml(report.location)}</strong></td>
+                <td><span style="font-family:var(--font-mono);">${report.pressure} PSI</span></td>
+                <td><span class="badge badge-${report.status.toLowerCase()}">${report.status}</span></td>
+                <td>${escapeHtml(report.timestamp)}</td>
+                <td>
+                    <form action="/mark_fixed/${report.id}" method="POST" style="margin:0;">
+                        <input type="hidden" name="csrf_token" value="${CSRF_TOKEN}">
+                        <button type="submit" class="btn btn-success btn-sm">✓ Mark Fixed</button>
+                    </form>
+                </td>
+            `;
+            tableBody.appendChild(tr);
+        });
+
+        lastUpdated.textContent = 'Updated: ' + new Date().toLocaleTimeString();
+
+    } catch (err) {
+        console.error('Dashboard error:', err);
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" style="text-align:center; color:var(--c-danger); padding:32px;">
+                    Failed to load reports — retrying…
+                </td>
+            </tr>`;
+    }
+}
+
+function setFilter(filter, btn) {
+    currentFilter = filter;
+
+    // Update active button styling
+    document.querySelectorAll('.filter-btn').forEach(function (b) {
+        b.classList.remove('active');
+    });
+    if (btn) btn.classList.add('active');
+
+    loadReports();
+}
+
+// Escape HTML to prevent XSS from injected content in report data
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = String(str);
+    return div.innerHTML;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    loadReports();
+    setInterval(loadReports, 5000);
+});
+</script>
+{% endblock %}

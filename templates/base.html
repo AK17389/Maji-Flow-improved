@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MAJI-FLOW{% endblock %}</title>
+
+    <!-- Google Fonts: DM Sans for body, DM Mono for data values -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- Dark mode applied before paint to prevent flash -->
+    <script>
+        (function () {
+            if (localStorage.getItem('darkMode') === 'enabled') {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    {% block head_extra %}{% endblock %}
+</head>
+
+<body>
+
+    <!-- ═══════════════════════════════ NAVBAR ═══════════════════════════════ -->
+    <nav class="navbar">
+        <a href="/" class="nav-brand">
+            <span class="nav-logo">◈</span>
+            MAJI-FLOW
+        </a>
+
+        <div class="nav-links">
+            {% block nav_links %}
+            <a href="/">Home</a>
+            <a href="{{ url_for('login') }}">Login</a>
+            <a href="{{ url_for('register') }}">Register</a>
+            {% endblock %}
+
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                <span class="theme-icon">☀</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ═══════════════════════════════ FLASH MESSAGES ═══════════════════════ -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash flash--{{ category }}">
+                        <span>{{ message }}</span>
+                        <button class="flash-close" onclick="this.parentElement.remove()" aria-label="Dismiss">✕</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- ═══════════════════════════════ PAGE CONTENT ══════════════════════════ -->
+    {% block content %}{% endblock %}
+
+    <!-- ═══════════════════════════════ THEME SCRIPT ══════════════════════════ -->
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+
+    {% block scripts %}{% endblock %}
+
+</body>
+</html>

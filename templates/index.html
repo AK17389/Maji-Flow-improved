@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}MAJI-FLOW — Intelligent Water Leak Detection{% endblock %}
+
+{% block content %}
+<section class="hero">
+
+    <div class="hero-badge">
+        <span>◈</span> AI-Powered Infrastructure Monitoring
+    </div>
+
+    <h1>
+        Detect Water Leaks<br>
+        <span>Before They Become Disasters</span>
+    </h1>
+
+    <p>
+        MAJI-FLOW monitors water pressure in real time, uses machine learning
+        to detect anomalies, and connects clients directly with maintenance
+        companies across Lusaka.
+    </p>
+
+    <div class="hero-actions">
+        <a href="{{ url_for('register') }}" class="btn btn-primary">Get Started</a>
+        <a href="{{ url_for('login') }}" class="btn btn-outline">Sign In</a>
+    </div>
+
+    <div class="hero-features">
+        <div class="hero-feature">
+            <div class="hero-feature-dot"></div>
+            Real-time pressure monitoring
+        </div>
+        <div class="hero-feature">
+            <div class="hero-feature-dot"></div>
+            ML leak prediction
+        </div>
+        <div class="hero-feature">
+            <div class="hero-feature-dot"></div>
+            Instant company alerts
+        </div>
+        <div class="hero-feature">
+            <div class="hero-feature-dot"></div>
+            PDF audit reports
+        </div>
+    </div>
+
+</section>
+{% endblock %}

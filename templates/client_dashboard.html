@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Client Dashboard — MAJI-FLOW{% endblock %}
+
+{% block nav_links %}
+<a href="{{ url_for('client_dashboard') }}">Dashboard</a>
+<a href="{{ url_for('logout') }}">Logout</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Welcome, {{ client_name }}</h2>
+    <p>Client Monitoring Dashboard</p>
+</div>
+
+<div class="client-layout">
+
+    <!-- Pressure & Status cards -->
+    <div class="pressure-display">
+
+        <div class="pressure-card">
+            <h3>Water Pressure</h3>
+            <div class="pressure-number">{{ pressure }}</div>
+            <div class="pressure-unit">PSI</div>
+        </div>
+
+        <div class="pressure-card">
+            <h3>Leak Detection Status</h3>
+            <div class="status-text status-{{ status | lower }}">
+                {{ status }}
+            </div>
+            <div class="pressure-unit" style="margin-top: 12px;">
+                Location: <strong>{{ location }}</strong>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Recent readings table -->
+    <div class="table-header">
+        <span class="table-title">Recent Readings</span>
+        <span class="last-updated">
+            <span class="live-dot"></span>
+            <span id="lastUpdated">Live — auto-refreshing</span>
+        </span>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Pressure (PSI)</th>
+                <th>Status</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody id="clientTableBody">
+            <tr class="loading-row">
+                <td colspan="3">
+                    <span class="loading-spinner"></span> Loading readings…
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Generate new reading -->
+    <div style="text-align:center; margin-top: 32px;">
+        <a href="{{ url_for('client_dashboard') }}" class="btn btn-primary">
+            ↺ Generate New Reading
+        </a>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadClientData() {
+    const tableBody = document.getElementById('clientTableBody');
+    if (!tableBody) return;
+
+    try {
+        const response = await fetch('/api/reports');
+        if (!response.ok) throw new Error('Network error');
+
+        const data = await response.json();
+        const reports = data.reports || [];
+
+        tableBody.innerHTML = '';
+
+        if (reports.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:32px; color:var(--text-subtle);">No readings yet</td></tr>';
+            return;
+        }
+
+        reports.forEach(function (report) {
+            const tr = document.createElement('tr');
+
+            if (report.status === 'LEAK')        tr.className = 'row-leak';
+            else if (report.status === 'WARNING') tr.className = 'row-warning';
+
+            tr.innerHTML = `
+                <td><span style="font-family:var(--font-mono); font-weight:500;">${report.pressure} PSI</span></td>
+                <td><span class="badge badge-${report.status.toLowerCase()}">${report.status}</span></td>
+                <td>${report.timestamp}</td>
+            `;
+            tableBody.appendChild(tr);
+        });
+
+        document.getElementById('lastUpdated').textContent =
+            'Last updated: ' + new Date().toLocaleTimeString();
+
+    } catch (err) {
+        console.error('Client dashboard error:', err);
+        tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--c-danger);">Failed to load data</td></tr>';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    loadClientData();
+    setInterval(loadClientData, 5000);
+});
+</script>
+{% endblock %}

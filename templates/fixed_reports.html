@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Fixed Reports — MAJI-FLOW{% endblock %}
+
+{% block nav_links %}
+<a href="{{ url_for('company_dashboard') }}">Active Reports</a>
+<a href="{{ url_for('company_analytics') }}">Analytics</a>
+<a href="{{ url_for('download_pdf') }}" class="btn btn-success btn-sm">↓ Download PDF</a>
+<a href="{{ url_for('logout') }}">Logout</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h2>Fixed Reports History</h2>
+    <p>Completed maintenance records — {{ reports | length }} resolved issue{{ 's' if reports | length != 1 }}</p>
+</div>
+
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>Location</th>
+                <th>Pressure</th>
+                <th>Original Status</th>
+                <th>Timestamp</th>
+                <th>Resolution</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if reports %}
+                {% for report in reports %}
+                <tr class="row-normal">
+                    <td><strong>{{ report['location'] }}</strong></td>
+                    <td><span style="font-family:var(--font-mono);">{{ report['pressure'] }} PSI</span></td>
+                    <td>
+                        <span class="badge badge-{{ report['status'] | lower }}">{{ report['status'] }}</span>
+                    </td>
+                    <td>{{ report['timestamp'] }}</td>
+                    <td><span class="badge badge-fixed">✓ Fixed</span></td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5" style="text-align:center; padding:48px; color:var(--text-subtle);">
+                        No fixed reports yet — resolved issues will appear here.
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
